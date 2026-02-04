@@ -174,33 +174,15 @@ ls .planning/todos/pending/*.md 2>/dev/null | wc -l
 Update STATE.md "### Pending Todos" section if exists.
 </step>
 
-<step name="git_commit">
-If todo was moved to done/, commit the change:
+<step name="notify_files_ready">
+If todo was moved to done/, inform the user:
 
-**Check planning config:**
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit.
 
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo moved (not committed - commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/todos/done/[filename]
-git rm --cached .planning/todos/pending/[filename] 2>/dev/null || true
-[ -f .planning/STATE.md ] && git add .planning/STATE.md
-git commit -m "$(cat <<'EOF'
-docs: start work on todo - [title]
-
-Moved to done/, beginning implementation.
-EOF
-)"
-```
-
-Confirm: "Committed: docs: start work on todo - [title]"
+Files ready to commit:
+- `.planning/todos/done/[filename]`
+- `.planning/todos/pending/[filename]` (deleted)
+- `.planning/STATE.md` (if updated)
 </step>
 
 </process>

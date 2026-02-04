@@ -56,16 +56,7 @@ Options:
 
 This ensures every execution has full project context.
 
-**Load planning config:**
 
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
 <step name="identify_plan">
@@ -961,91 +952,16 @@ After TDD plan completion, ensure:
 See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 </tdd_plan_execution>
 
-<task_commit>
-## Task Commit Protocol
+<task_completion>
+## Task Completion Protocol
 
-After each task completes (verification passed, done criteria met), commit immediately:
+After each task completes (verification passed, done criteria met), note the modified files for the user.
 
-**1. Identify modified files:**
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add, git commit, or git push.
 
-Track files changed during this specific task (not the entire plan):
+Inform the user which files were modified by the task so they can commit at their discretion.
 
-```bash
-git status --short
-```
-
-**2. Stage only task-related files:**
-
-Stage each file individually (NEVER use `git add .` or `git add -A`):
-
-```bash
-# Example - adjust to actual files modified by this task
-git add src/api/auth.ts
-git add src/types/user.ts
-```
-
-**3. Determine commit type:**
-
-| Type | When to Use | Example |
-|------|-------------|---------|
-| `feat` | New feature, endpoint, component, functionality | feat(08-02): create user registration endpoint |
-| `fix` | Bug fix, error correction | fix(08-02): correct email validation regex |
-| `test` | Test-only changes (TDD RED phase) | test(08-02): add failing test for password hashing |
-| `refactor` | Code cleanup, no behavior change (TDD REFACTOR phase) | refactor(08-02): extract validation to helper |
-| `perf` | Performance improvement | perf(08-02): add database index for user lookups |
-| `docs` | Documentation changes | docs(08-02): add API endpoint documentation |
-| `style` | Formatting, linting fixes | style(08-02): format auth module |
-| `chore` | Config, tooling, dependencies | chore(08-02): add bcrypt dependency |
-
-**4. Craft commit message:**
-
-Format: `{type}({phase}-{plan}): {task-name-or-description}`
-
-```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
-
-- {key change 1}
-- {key change 2}
-- {key change 3}
-"
-```
-
-**Examples:**
-
-```bash
-# Standard plan task
-git commit -m "feat(08-02): create user registration endpoint
-
-- POST /auth/register validates email and password
-- Checks for duplicate users
-- Returns JWT token on success
-"
-
-# Another standard task
-git commit -m "fix(08-02): correct email validation regex
-
-- Fixed regex to accept plus-addressing
-- Added tests for edge cases
-"
-```
-
-**Note:** TDD plans have their own commit pattern (test/feat/refactor for RED/GREEN/REFACTOR phases). See `<tdd_plan_execution>` section above.
-
-**5. Record commit hash:**
-
-After committing, capture hash for SUMMARY.md:
-
-```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
-echo "Task ${TASK_NUM} committed: ${TASK_COMMIT}"
-```
-
-Store in array or list for SUMMARY generation:
-```bash
-TASK_COMMITS+=("Task ${TASK_NUM}: ${TASK_COMMIT}")
-```
-
-</task_commit>
+</task_completion>
 
 <step name="checkpoint_protocol">
 When encountering `type="checkpoint:*"`:
@@ -1507,87 +1423,13 @@ ROADMAP_FILE=".planning/ROADMAP.md"
 - Add completion date
 </step>
 
-<step name="git_commit_metadata">
-Commit execution metadata (SUMMARY + STATE + ROADMAP):
+<step name="notify_files_ready">
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit.
 
-**Note:** All task code has already been committed during execution (one commit per task).
-PLAN.md was already committed during plan-phase. This final commit captures execution results only.
-
-**Check planning config:**
-
-If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
-- Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (commit_docs: false)"
-- Proceed to next step
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
-
-**1. Stage execution artifacts:**
-
-```bash
-git add .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-git add .planning/STATE.md
-```
-
-**2. Stage roadmap:**
-
-```bash
-git add .planning/ROADMAP.md
-```
-
-**3. Verify staging:**
-
-```bash
-git status
-# Should show only execution artifacts (SUMMARY, STATE, ROADMAP), no code files
-```
-
-**4. Commit metadata:**
-
-```bash
-git commit -m "$(cat <<'EOF'
-docs({phase}-{plan}): complete [plan-name] plan
-
-Tasks completed: [N]/[N]
-- [Task 1 name]
-- [Task 2 name]
-- [Task 3 name]
-
-SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-EOF
-)"
-```
-
-**Example:**
-
-```bash
-git commit -m "$(cat <<'EOF'
-docs(08-02): complete user registration plan
-
-Tasks completed: 3/3
-- User registration endpoint
-- Password hashing with bcrypt
-- Email confirmation flow
-
-SUMMARY: .planning/phases/08-user-auth/08-02-registration-SUMMARY.md
-EOF
-)"
-```
-
-**Git log after plan execution:**
-
-```
-abc123f docs(08-02): complete user registration plan
-def456g feat(08-02): add email confirmation flow
-hij789k feat(08-02): implement password hashing with bcrypt
-lmn012o feat(08-02): create user registration endpoint
-```
-
-Each task has its own commit, followed by one metadata commit documenting plan completion.
-
-See `git-integration.md` (loaded via required_reading) for commit message conventions.
+Inform the user which files were created/modified and are ready to commit:
+- `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
+- `.planning/STATE.md`
+- `.planning/ROADMAP.md`
 </step>
 
 <step name="update_codebase_map">
@@ -1622,10 +1464,7 @@ git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
 **Update format:**
 Make single targeted edits - add a bullet point, update a path, or remove a stale entry. Don't rewrite sections.
 
-```bash
-git add .planning/codebase/*.md
-git commit --amend --no-edit  # Include in metadata commit
-```
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit. Note that `.planning/codebase/*.md` files were updated if applicable.
 
 **If .planning/codebase/ doesn't exist:**
 Skip this step.

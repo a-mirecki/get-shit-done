@@ -100,12 +100,9 @@ Output: Milestone archived (roadmap + requirements), PROJECT.md evolved, git tag
    - Add "Next Milestone Goals" section
    - Archive previous content in `<details>` (if v1.1+)
 
-7. **Commit and tag:**
+7. **Notify user of files to commit:**
 
-   - Stage: MILESTONES.md, PROJECT.md, ROADMAP.md, STATE.md, archive files
-   - Commit: `chore: archive v{{version}} milestone`
-   - Tag: `git tag -a v{{version}} -m "[milestone summary]"`
-   - Ask about pushing tag
+   **All git write operations (add, commit, tag, push) are handled manually by the user.** Do NOT execute git add, git commit, git tag, or git push. Inform the user which files are ready to commit and suggest tagging with `git tag -a v{{version}}`.
 
 8. **Offer next steps:**
    - `/gsd:new-milestone` — start next milestone (questioning → research → requirements → roadmap)

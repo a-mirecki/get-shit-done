@@ -104,25 +104,11 @@ Last activity: [today] — Milestone v[X.Y] started
 
 Keep Accumulated Context section (decisions, blockers) from previous milestone.
 
-## Phase 6: Cleanup and Commit
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files were modified so they can commit at their discretion.
 
 Delete MILESTONE-CONTEXT.md if exists (consumed).
 
-Check planning config:
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-If `COMMIT_PLANNING_DOCS=false`: Skip git operations
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-```bash
-git add .planning/PROJECT.md .planning/STATE.md
-git commit -m "docs: start milestone v[X.Y] [Name]"
-```
-
-## Phase 6.5: Resolve Model Profile
+## Phase 6: Resolve Model Profile
 
 Read model profile for agent spawning:
 
@@ -502,20 +488,7 @@ Does this capture what you're building? (yes / adjust)
 
 If "adjust": Return to scoping.
 
-**Commit requirements:**
-
-Check planning config (same pattern as Phase 6).
-
-If committing:
-```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: define milestone v[X.Y] requirements
-
-[X] requirements across [N] categories
-EOF
-)"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/REQUIREMENTS.md` is ready to commit.
 
 ## Phase 9: Create Roadmap
 
@@ -642,25 +615,7 @@ Use AskUserQuestion:
 
 **If "Review full file":** Display raw `cat .planning/ROADMAP.md`, then re-ask.
 
-**Commit roadmap (after approval):**
-
-Check planning config (same pattern as Phase 6).
-
-If committing:
-```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: create milestone v[X.Y] roadmap ([N] phases)
-
-Phases:
-[N]. [phase-name]: [requirements covered]
-[N+1]. [phase-name]: [requirements covered]
-...
-
-All milestone requirements mapped to phases.
-EOF
-)"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/ROADMAP.md`, `.planning/STATE.md`, and `.planning/REQUIREMENTS.md` are ready to commit.
 
 ## Phase 10: Done
 

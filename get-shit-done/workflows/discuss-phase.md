@@ -390,33 +390,10 @@ Created: .planning/phases/${PADDED_PHASE}-${SLUG}/${PADDED_PHASE}-CONTEXT.md
 ```
 </step>
 
-<step name="git_commit">
-Commit phase context:
+<step name="notify_context_ready">
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit.
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add "${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md"
-git commit -m "$(cat <<'EOF'
-docs(${PADDED_PHASE}): capture phase context
-
-Phase ${PADDED_PHASE}: ${PHASE_NAME}
-- Implementation decisions documented
-- Phase boundary established
-EOF
-)"
-```
-
-Confirm: "Committed: docs(${PADDED_PHASE}): capture phase context"
+Inform the user that `${PHASE_DIR}/${PADDED_PHASE}-CONTEXT.md` is ready to commit.
 </step>
 
 </process>

@@ -252,31 +252,14 @@ Use Edit tool to make these changes atomically
 
 ---
 
-**Step 8: Final commit and completion**
+**Step 8: Completion**
 
-Stage and commit quick task artifacts:
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit.
 
-```bash
-# Stage quick task artifacts
-git add ${QUICK_DIR}/${next_num}-PLAN.md
-git add ${QUICK_DIR}/${next_num}-SUMMARY.md
-git add .planning/STATE.md
-
-# Commit with quick task format
-git commit -m "$(cat <<'EOF'
-docs(quick-${next_num}): ${DESCRIPTION}
-
-Quick task completed.
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
-EOF
-)"
-```
-
-Get final commit hash:
-```bash
-commit_hash=$(git rev-parse --short HEAD)
-```
+Inform the user that the following files are ready to commit:
+- `${QUICK_DIR}/${next_num}-PLAN.md`
+- `${QUICK_DIR}/${next_num}-SUMMARY.md`
+- `.planning/STATE.md`
 
 Display completion output:
 ```

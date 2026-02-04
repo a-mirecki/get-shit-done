@@ -454,10 +454,6 @@ PHASE_DIR=$(ls -d .planning/phases/$PADDED_PHASE-* .planning/phases/$PHASE-* 2>/
 # Read CONTEXT.md if exists (from /gsd:discuss-phase)
 cat "$PHASE_DIR"/*-CONTEXT.md 2>/dev/null
 
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
 **If CONTEXT.md exists**, it contains user decisions that MUST constrain your research:
@@ -557,21 +553,11 @@ Where `PHASE_DIR` is the full path (e.g., `.planning/phases/01-foundation`)
 
 ⚠️ **The `commit_docs` setting only controls git commits, NOT file writing.** Always write the file first.
 
-## Step 6: Commit Research (optional)
+## Step 6: Notify Files Ready
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations only. The file MUST already be written in Step 5.
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit.
 
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add "$PHASE_DIR/$PADDED_PHASE-RESEARCH.md"
-git commit -m "docs($PHASE): research phase domain
-
-Phase $PHASE: $PHASE_NAME
-- Standard stack identified
-- Architecture patterns documented
-- Pitfalls catalogued"
-```
+Inform the orchestrator that `$PHASE_DIR/$PADDED_PHASE-RESEARCH.md` has been written and is ready for the user to commit at their discretion.
 
 ## Step 7: Return Structured Result
 

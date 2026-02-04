@@ -55,16 +55,6 @@ Options:
 
 **If .planning/ doesn't exist:** Error - project not initialized.
 
-**Load planning config:**
-
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 
 **Load parallelization config:**
 
@@ -114,38 +104,33 @@ if [ "$BRANCHING_STRATEGY" = "phase" ]; then
   # Apply template
   BRANCH_NAME=$(echo "$PHASE_BRANCH_TEMPLATE" | sed "s/{phase}/$PADDED_PHASE/g" | sed "s/{slug}/$PHASE_SLUG/g")
 
-  # Create or switch to branch
-  git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
-
-  echo "Branch: $BRANCH_NAME (phase branching)"
+  # Suggest branch name to user
+  echo "Suggested branch: $BRANCH_NAME (phase branching)"
+  echo "User should create/switch to this branch manually."
 fi
 ```
 
-**For "milestone" strategy — create/switch to milestone branch:**
+**For "milestone" strategy — suggest milestone branch name:**
 
 ```bash
 if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  # Get current milestone info from ROADMAP.md
   MILESTONE_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+' .planning/ROADMAP.md | head -1 || echo "v1.0")
   MILESTONE_NAME=$(grep -A1 "## .*$MILESTONE_VERSION" .planning/ROADMAP.md | tail -1 | sed 's/.*- //' | cut -d'(' -f1 | tr -d ' ' || echo "milestone")
-
-  # Create slug
   MILESTONE_SLUG=$(echo "$MILESTONE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
-
-  # Apply template
   BRANCH_NAME=$(echo "$MILESTONE_BRANCH_TEMPLATE" | sed "s/{milestone}/$MILESTONE_VERSION/g" | sed "s/{slug}/$MILESTONE_SLUG/g")
 
-  # Create or switch to branch (same branch for all phases in milestone)
-  git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
-
-  echo "Branch: $BRANCH_NAME (milestone branching)"
+  echo "Suggested branch: $BRANCH_NAME (milestone branching)"
+  echo "User should create/switch to this branch manually."
 fi
 ```
 
-**Report branch status:**
+**All git write operations (checkout -b, merge, push) are handled manually by the user.** Do NOT execute git checkout -b or git branch commands. Inform the user of the suggested branch name.
+
+**Report branch suggestion:**
 
 ```
-Branching: {strategy} → {branch_name}
+Branching: {strategy} → suggested branch: {branch_name}
+Please create/switch to this branch before continuing.
 ```
 
 **Note:** All subsequent plan commits go to this branch. User handles merging based on their workflow.
@@ -594,23 +579,11 @@ Update ROADMAP.md to reflect phase completion:
 # Update status
 ```
 
-**Check planning config:**
-
-If `COMMIT_PLANNING_DOCS=false` (set in load_project_state):
-- Skip all git operations for .planning/ files
-- Planning docs exist locally but are gitignored
-- Log: "Skipping planning docs commit (commit_docs: false)"
-- Proceed to offer_next step
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-- Continue with git operations below
-
-Commit phase completion (roadmap, state, verification):
-```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/phases/{phase_dir}/*-VERIFICATION.md
-git add .planning/REQUIREMENTS.md  # if updated
-git commit -m "docs(phase-{X}): complete phase execution"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files were modified so they can commit at their discretion:
+- `.planning/ROADMAP.md`
+- `.planning/STATE.md`
+- `.planning/phases/{phase_dir}/*-VERIFICATION.md`
+- `.planning/REQUIREMENTS.md` (if updated)
 </step>
 
 <step name="offer_next">

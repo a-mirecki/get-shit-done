@@ -40,16 +40,7 @@ Options:
 
 **If .planning/ doesn't exist:** Error - project not initialized.
 
-**Load planning config:**
 
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
 
@@ -546,64 +537,11 @@ When executing a task with `tdd="true"` attribute, follow RED-GREEN-REFACTOR cyc
 - If tests fail in REFACTOR phase: Undo refactor
   </tdd_execution>
 
-<task_commit_protocol>
-After each task completes (verification passed, done criteria met), commit immediately.
+<task_completion_protocol>
+After each task completes (verification passed, done criteria met), note it for the user.
 
-**1. Identify modified files:**
-
-```bash
-git status --short
-```
-
-**2. Stage only task-related files:**
-Stage each file individually (NEVER use `git add .` or `git add -A`):
-
-```bash
-git add src/api/auth.ts
-git add src/types/user.ts
-```
-
-**3. Determine commit type:**
-
-| Type       | When to Use                                     |
-| ---------- | ----------------------------------------------- |
-| `feat`     | New feature, endpoint, component, functionality |
-| `fix`      | Bug fix, error correction                       |
-| `test`     | Test-only changes (TDD RED phase)               |
-| `refactor` | Code cleanup, no behavior change                |
-| `perf`     | Performance improvement                         |
-| `docs`     | Documentation changes                           |
-| `style`    | Formatting, linting fixes                       |
-| `chore`    | Config, tooling, dependencies                   |
-
-**4. Craft commit message:**
-
-Format: `{type}({phase}-{plan}): {task-name-or-description}`
-
-```bash
-git commit -m "{type}({phase}-{plan}): {concise task description}
-
-- {key change 1}
-- {key change 2}
-- {key change 3}
-"
-```
-
-**5. Record commit hash:**
-
-```bash
-TASK_COMMIT=$(git rev-parse --short HEAD)
-```
-
-Track for SUMMARY.md generation.
-
-**Atomic commit benefits:**
-
-- Each task independently revertable
-- Git bisect finds exact failing task
-- Git blame traces line to specific task context
-- Clear history for Claude in future sessions
-  </task_commit_protocol>
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add, git commit, or git push. After task completion, inform the user which files were modified so they can commit at their discretion.
+  </task_completion_protocol>
 
 <summary_creation>
 After all tasks complete, create `{phase}-{plan}-SUMMARY.md`.
@@ -716,35 +654,15 @@ Resume file: [path to .continue-here if exists, else "None"]
 
 </state_updates>
 
-<final_commit>
+<final_output>
 After SUMMARY.md and STATE.md updates:
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations for planning files, log "Skipping planning docs commit (commit_docs: false)"
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files were created/modified so they can commit at their discretion.
 
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-**1. Stage execution artifacts:**
-
-```bash
-git add .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-git add .planning/STATE.md
-```
-
-**2. Commit metadata:**
-
-```bash
-git commit -m "docs({phase}-{plan}): complete [plan-name] plan
-
-Tasks completed: [N]/[N]
-- [Task 1 name]
-- [Task 2 name]
-
-SUMMARY: .planning/phases/XX-name/{phase}-{plan}-SUMMARY.md
-"
-```
-
-This is separate from per-task commits. It captures execution results only.
-</final_commit>
+Files to mention:
+- `.planning/phases/XX-name/{phase}-{plan}-SUMMARY.md`
+- `.planning/STATE.md`
+</final_output>
 
 <completion_format>
 When plan completes successfully, return:

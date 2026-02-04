@@ -123,30 +123,12 @@ If `.planning/STATE.md` exists:
 2. Update "### Pending Todos" under "## Accumulated Context"
 </step>
 
-<step name="git_commit">
-Commit the todo and any updated state:
+<step name="notify_files_ready">
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit.
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Todo saved (not committed - commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/todos/pending/[filename]
-[ -f .planning/STATE.md ] && git add .planning/STATE.md
-git commit -m "$(cat <<'EOF'
-docs: capture todo - [title]
-
-Area: [area]
-EOF
-)"
-```
+Inform the user that the following files are ready to commit:
+- `.planning/todos/pending/[filename]`
+- `.planning/STATE.md` (if updated)
 
 Confirm: "Committed: docs: capture todo - [title]"
 </step>

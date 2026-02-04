@@ -979,33 +979,7 @@ mkdir -p .planning/debug/resolved
 mv .planning/debug/{slug}.md .planning/debug/resolved/
 ```
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**Commit the fix:**
-
-If `COMMIT_PLANNING_DOCS=true` (default):
-```bash
-git add -A
-git commit -m "fix: {brief description}
-
-Root cause: {root_cause}
-Debug session: .planning/debug/resolved/{slug}.md"
-```
-
-If `COMMIT_PLANNING_DOCS=false`:
-```bash
-# Only commit code changes, exclude .planning/
-git add -A
-git reset .planning/
-git commit -m "fix: {brief description}
-
-Root cause: {root_cause}"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files were modified so they can commit at their discretion.
 
 Report completion and offer next steps.
 </step>

@@ -83,20 +83,13 @@ Phase: $ARGUMENTS
    - Collect summaries from all plans
    - Report phase completion status
 
-6. **Commit any orchestrator corrections**
+6. **Check for uncommitted orchestrator corrections**
    Check for uncommitted changes before verification:
    ```bash
    git status --porcelain
    ```
 
-   **If changes exist:** Orchestrator made corrections between executor completions. Stage and commit them individually:
-   ```bash
-   # Stage each modified file individually (never use git add -u, git add ., or git add -A)
-   git status --porcelain | grep '^ M' | cut -c4- | while read file; do
-     git add "$file"
-   done
-   git commit -m "fix({phase}): orchestrator corrections"
-   ```
+   **If changes exist:** Inform the user that orchestrator corrections were made and which files were modified. **All git write operations are handled manually by the user.** Do NOT execute git add or git commit.
 
    **If clean:** Continue to verification.
 
@@ -125,13 +118,11 @@ Phase: $ARGUMENTS
    - Write updated REQUIREMENTS.md
    - Skip if: REQUIREMENTS.md doesn't exist, or phase has no Requirements line
 
-10. **Commit phase completion**
-    Check `COMMIT_PLANNING_DOCS` from config.json (default: true).
-    If false: Skip git operations for .planning/ files.
-    If true: Bundle all phase metadata updates in one commit:
-    - Stage: `git add .planning/ROADMAP.md .planning/STATE.md`
-    - Stage REQUIREMENTS.md if updated: `git add .planning/REQUIREMENTS.md`
-    - Commit: `docs({phase}): complete {phase-name} phase`
+10. **Notify user of files to commit**
+    **All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files are ready to commit:
+    - `.planning/ROADMAP.md`
+    - `.planning/STATE.md`
+    - `.planning/REQUIREMENTS.md` (if updated)
 
 11. **Offer next steps**
     - Route to next action (see `<offer_next>`)

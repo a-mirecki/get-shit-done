@@ -49,10 +49,6 @@ cat .planning/research/FEATURES.md
 cat .planning/research/ARCHITECTURE.md
 cat .planning/research/PITFALLS.md
 
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
 ```
 
 Parse each file to extract:
@@ -126,30 +122,16 @@ Use template: ~/.claude/get-shit-done/templates/research-project/SUMMARY.md
 
 Write to `.planning/research/SUMMARY.md`
 
-## Step 7: Commit All Research
+## Step 7: Notify Files Ready
 
-The 4 parallel researcher agents write files but do NOT commit. You commit everything together.
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit.
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/research/
-git commit -m "docs: complete project research
-
-Files:
-- STACK.md
-- FEATURES.md
-- ARCHITECTURE.md
-- PITFALLS.md
-- SUMMARY.md
-
-Key findings:
-- Stack: [one-liner]
-- Architecture: [one-liner]
-- Critical pitfall: [one-liner]"
-```
+Inform the orchestrator that the following research files have been written and are ready for the user to commit at their discretion:
+- `.planning/research/STACK.md`
+- `.planning/research/FEATURES.md`
+- `.planning/research/ARCHITECTURE.md`
+- `.planning/research/PITFALLS.md`
+- `.planning/research/SUMMARY.md`
 
 ## Step 8: Return Summary
 

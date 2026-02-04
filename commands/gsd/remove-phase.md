@@ -13,7 +13,7 @@ allowed-tools:
 Remove an unstarted future phase from the roadmap and renumber all subsequent phases to maintain a clean, linear sequence.
 
 Purpose: Clean removal of work you've decided not to do, without polluting context with cancelled/deferred markers.
-Output: Phase deleted, all subsequent phases renumbered, git commit as historical record.
+Output: Phase deleted, all subsequent phases renumbered
 </objective>
 
 <execution_context>
@@ -231,7 +231,7 @@ Update STATE.md:
 2. **Recalculate progress percentage:**
    - New percentage based on completed plans / new total plans
 
-Do NOT add a "Roadmap Evolution" note - the git commit is the record.
+Do NOT add a "Roadmap Evolution" note.
 
 Write updated STATE.md.
 </step>
@@ -249,26 +249,8 @@ grep -r "Phase 19" .planning/phases/18-*/ 2>/dev/null
 Update any internal references to reflect new numbering.
 </step>
 
-<step name="commit">
-Stage and commit the removal:
-
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/
-git commit -m "chore: remove phase {target} ({original-phase-name})"
-```
-
-The commit message preserves the historical record of what was removed.
+<step name="notify_files_ready">
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user which files were modified so they can commit at their discretion.
 </step>
 
 <step name="completion">
@@ -281,7 +263,7 @@ Changes:
 - Deleted: .planning/phases/{target}-{slug}/
 - Renumbered: Phases {first-renumbered}-{last-old} → {first-renumbered-1}-{last-new}
 - Updated: ROADMAP.md, STATE.md
-- Committed: chore: remove phase {target} ({original-name})
+- Ready for user to commit
 
 Current roadmap: {total-remaining} phases
 Current position: Phase {current} of {new-total}

@@ -983,16 +983,9 @@ After making edits, self-check:
 - [ ] Dependencies still correct
 - [ ] Files on disk updated (use Write tool)
 
-### Step 6: Commit Revised Plans
+### Step 6: Note Revised Plans
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/phases/$PHASE-*/$PHASE-*-PLAN.md
-git commit -m "fix($PHASE): revise plans based on checker feedback"
-```
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that revised plans are ready to commit.
 
 ### Step 7: Return Revision Summary
 
@@ -1035,16 +1028,6 @@ Read `.planning/STATE.md` and parse:
 
 If STATE.md missing but .planning/ exists, offer to reconstruct or continue without.
 
-**Load planning config:**
-
-```bash
-# Check if planning docs should be committed (default: true)
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-# Auto-detect gitignored (overrides config)
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-Store `COMMIT_PLANNING_DOCS` for use in git operations.
 </step>
 
 <step name="load_codebase_context">
@@ -1253,22 +1236,12 @@ Update ROADMAP.md to finalize phase placeholders created by add-phase or insert-
 4. Write updated ROADMAP.md
 </step>
 
-<step name="git_commit">
-Commit phase plan(s) and updated roadmap:
+<step name="notify_files_ready">
+**All git write operations are handled manually by the user.** Do NOT execute git add or git commit.
 
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations, log "Skipping planning docs commit (commit_docs: false)"
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/phases/$PHASE-*/$PHASE-*-PLAN.md .planning/ROADMAP.md
-git commit -m "docs($PHASE): create phase plan
-
-Phase $PHASE: $PHASE_NAME
-- [N] plan(s) in [M] wave(s)
-- [X] parallel, [Y] sequential
-- Ready for execution"
-```
+Inform the user that the following files are ready to commit:
+- `.planning/phases/$PHASE-*/$PHASE-*-PLAN.md`
+- `.planning/ROADMAP.md`
 </step>
 
 <step name="offer_next">

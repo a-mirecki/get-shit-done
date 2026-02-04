@@ -222,18 +222,7 @@ Initialize with any decisions made during questioning:
 
 Do not compress. Capture everything gathered.
 
-**Commit PROJECT.md:**
-
-```bash
-mkdir -p .planning
-git add .planning/PROJECT.md
-git commit -m "$(cat <<'EOF'
-docs: initialize project
-
-[One-liner from PROJECT.md What This Is section]
-EOF
-)"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/PROJECT.md` is ready to commit.
 
 ## Phase 5: Workflow Preferences
 
@@ -359,19 +348,7 @@ Create `.planning/config.json` with all settings:
 **If commit_docs = Yes:**
 - No additional gitignore entries needed
 
-**Commit config.json:**
-
-```bash
-git add .planning/config.json
-git commit -m "$(cat <<'EOF'
-chore: add project config
-
-Mode: [chosen mode]
-Depth: [chosen depth]
-Parallelization: [enabled/disabled]
-Workflow agents: research=[on/off], plan_check=[on/off], verifier=[on/off]
-EOF
-)"
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/config.json` is ready to commit.
 ```
 
 **Note:** Run `/gsd:settings` anytime to update these preferences.
@@ -771,17 +748,7 @@ Does this capture what you're building? (yes / adjust)
 
 If "adjust": Return to scoping.
 
-**Commit requirements:**
-
-```bash
-git add .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: define v1 requirements
-
-[X] requirements across [N] categories
-[Y] requirements deferred to v2
-EOF
-)"
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/REQUIREMENTS.md` is ready to commit.
 ```
 
 ## Phase 8: Create Roadmap
@@ -909,22 +876,7 @@ Use AskUserQuestion:
 
 **If "Review full file":** Display raw `cat .planning/ROADMAP.md`, then re-ask.
 
-**Commit roadmap (after approval):**
-
-```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/REQUIREMENTS.md
-git commit -m "$(cat <<'EOF'
-docs: create roadmap ([N] phases)
-
-Phases:
-1. [phase-name]: [requirements covered]
-2. [phase-name]: [requirements covered]
-...
-
-All v1 requirements mapped to phases.
-EOF
-)"
-```
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit. Inform the user that `.planning/ROADMAP.md`, `.planning/STATE.md`, and `.planning/REQUIREMENTS.md` are ready to commit.
 
 ## Phase 10: Done
 

@@ -618,7 +618,7 @@ MILESTONE_BRANCH=$(git branch --list "${BRANCH_PREFIX}*" 2>/dev/null | sed 's/^\
 
 **If no branches found:** Skip to git_tag step.
 
-**If branches exist — present merge options:**
+**If branches exist — inform the user:**
 
 ```
 ## Git Branches Detected
@@ -628,189 +628,34 @@ Branching strategy: {phase/milestone}
 Branches found:
 {list of branches}
 
-Options:
-1. **Merge to main** — Merge branch(es) to main
-2. **Delete without merging** — Branches already merged or not needed
-3. **Keep branches** — Leave for manual handling
-```
+**All git write operations (merge, branch deletion, push) are handled manually by the user.**
 
-Use AskUserQuestion:
-
-```
-AskUserQuestion([
-  {
-    question: "How should branches be handled?",
-    header: "Branches",
-    multiSelect: false,
-    options: [
-      { label: "Squash merge (Recommended)", description: "Squash all commits into one clean commit on main" },
-      { label: "Merge with history", description: "Preserve all individual commits (--no-ff)" },
-      { label: "Delete without merging", description: "Branches already merged or not needed" },
-      { label: "Keep branches", description: "Leave branches for manual handling later" }
-    ]
-  }
-])
-```
-
-**If "Squash merge":**
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
-# For phase strategy - squash merge each phase branch
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    echo "Squash merging $branch..."
-    git merge --squash "$branch"
-    git commit -m "feat: $branch for v[X.Y]"
-  done
-fi
-
-# For milestone strategy - squash merge milestone branch
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  echo "Squash merging $MILESTONE_BRANCH..."
-  git merge --squash "$MILESTONE_BRANCH"
-  git commit -m "feat: $MILESTONE_BRANCH for v[X.Y]"
-fi
-
-git checkout "$CURRENT_BRANCH"
-```
-
-Report: "Squash merged branches to main"
-
-**If "Merge with history":**
-
-```bash
-CURRENT_BRANCH=$(git branch --show-current)
-git checkout main
-
-# For phase strategy - merge each phase branch
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    echo "Merging $branch..."
-    git merge --no-ff "$branch" -m "Merge branch '$branch' for v[X.Y]"
-  done
-fi
-
-# For milestone strategy - merge milestone branch
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  echo "Merging $MILESTONE_BRANCH..."
-  git merge --no-ff "$MILESTONE_BRANCH" -m "Merge branch '$MILESTONE_BRANCH' for v[X.Y]"
-fi
-
-git checkout "$CURRENT_BRANCH"
-```
-
-Report: "Merged branches to main with full history"
-
-**If "Delete without merging":**
-
-```bash
-if [ "$BRANCHING_STRATEGY" = "phase" ]; then
-  for branch in $PHASE_BRANCHES; do
-    git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
-  done
-fi
-
-if [ "$BRANCHING_STRATEGY" = "milestone" ]; then
-  git branch -d "$MILESTONE_BRANCH" 2>/dev/null || git branch -D "$MILESTONE_BRANCH"
-fi
-```
-
-Report: "Deleted branches"
-
-**If "Keep branches":**
-
-Report: "Branches preserved for manual handling"
-
-</step>
-
-<step name="git_tag">
-
-Create git tag for milestone:
-
-```bash
-git tag -a v[X.Y] -m "$(cat <<'EOF'
-v[X.Y] [Name]
-
-Delivered: [One sentence]
-
-Key accomplishments:
-- [Item 1]
-- [Item 2]
-- [Item 3]
-
-See .planning/MILESTONES.md for full details.
-EOF
-)"
-```
-
-Confirm: "Tagged: v[X.Y]"
-
-Ask: "Push tag to remote? (y/n)"
-
-If yes:
-
-```bash
-git push origin v[X.Y]
+Recommended options:
+1. Squash merge to main: `git merge --squash {branch}`
+2. Merge with history: `git merge --no-ff {branch}`
+3. Delete without merging: `git branch -D {branch}`
+4. Keep branches for later
 ```
 
 </step>
 
-<step name="git_commit_milestone">
+<step name="notify_milestone_complete">
 
-Commit milestone completion including archive files and deletions.
+**All git write operations (add, commit, tag, push) are handled manually by the user.** Do NOT execute git add, git commit, git tag, or git push.
 
-**Check planning config:**
+Inform the user about the milestone completion and suggest they:
+1. Tag the milestone: `git tag -a v[X.Y] -m "v[X.Y] [Name]"`
+2. Commit the archived and updated files
+3. Push the tag if desired
 
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-# Stage archive files (new)
-git add .planning/milestones/v[X.Y]-ROADMAP.md
-git add .planning/milestones/v[X.Y]-REQUIREMENTS.md
-git add .planning/milestones/v[X.Y]-MILESTONE-AUDIT.md 2>/dev/null || true
-
-# Stage updated files
-git add .planning/MILESTONES.md
-git add .planning/PROJECT.md
-git add .planning/STATE.md
-
-# Stage deletions
-git add -u .planning/
-
-# Commit with descriptive message
-git commit -m "$(cat <<'EOF'
-chore: complete v[X.Y] milestone
-
-Archived:
-- milestones/v[X.Y]-ROADMAP.md
-- milestones/v[X.Y]-REQUIREMENTS.md
-- milestones/v[X.Y]-MILESTONE-AUDIT.md (if audit was run)
-
-Deleted (fresh for next milestone):
-- ROADMAP.md
-- REQUIREMENTS.md
-
-Updated:
-- MILESTONES.md (new entry)
-- PROJECT.md (requirements → Validated)
-- STATE.md (reset for next milestone)
-
-Tagged: v[X.Y]
-EOF
-)"
-```
-
-Confirm: "Committed: chore: complete v[X.Y] milestone"
+Files modified:
+- `.planning/milestones/v[X.Y]-ROADMAP.md` (new archive)
+- `.planning/milestones/v[X.Y]-REQUIREMENTS.md` (new archive)
+- `.planning/milestones/v[X.Y]-MILESTONE-AUDIT.md` (if audit was run)
+- `.planning/MILESTONES.md` (updated)
+- `.planning/PROJECT.md` (updated)
+- `.planning/STATE.md` (updated)
+- Deleted: `ROADMAP.md`, `REQUIREMENTS.md` (fresh for next milestone)
 
 </step>
 

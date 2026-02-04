@@ -230,35 +230,10 @@ If any documents missing or empty, note which agents may have failed.
 Continue to commit_codebase_map.
 </step>
 
-<step name="commit_codebase_map">
-Commit the codebase map:
+<step name="notify_codebase_map_ready">
+**All git write operations (add, commit, push) are handled manually by the user.** Do NOT execute git add or git commit.
 
-**Check planning config:**
-
-```bash
-COMMIT_PLANNING_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
-git check-ignore -q .planning 2>/dev/null && COMMIT_PLANNING_DOCS=false
-```
-
-**If `COMMIT_PLANNING_DOCS=false`:** Skip git operations
-
-**If `COMMIT_PLANNING_DOCS=true` (default):**
-
-```bash
-git add .planning/codebase/*.md
-git commit -m "$(cat <<'EOF'
-docs: map existing codebase
-
-- STACK.md - Technologies and dependencies
-- ARCHITECTURE.md - System design and patterns
-- STRUCTURE.md - Directory layout
-- CONVENTIONS.md - Code style and patterns
-- TESTING.md - Test structure
-- INTEGRATIONS.md - External services
-- CONCERNS.md - Technical debt and issues
-EOF
-)"
-```
+Inform the user that `.planning/codebase/*.md` files are ready to commit.
 
 Continue to offer_next.
 </step>

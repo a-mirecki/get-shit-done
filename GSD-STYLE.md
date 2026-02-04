@@ -294,15 +294,17 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 
 ---
 
-## Commit Conventions
+## Git Policy
 
-### Format
+**All git write operations (add, commit, push, tag) are handled manually by the user.** GSD agents and workflows MUST NOT execute any git write operations. After completing work, inform the user which files were created or modified so they can commit at their discretion.
+
+### Recommended Commit Format
 
 ```
 {type}({phase}-{plan}): {description}
 ```
 
-### Types
+### Commit Types
 
 | Type | Use |
 |------|-----|
@@ -312,13 +314,6 @@ Use subagents for autonomous work. Reserve main context for user interaction.
 | `refactor` | Code cleanup (TDD REFACTOR) |
 | `docs` | Documentation/metadata |
 | `chore` | Config/dependencies |
-
-### Rules
-
-- One commit per task during execution
-- Stage files individually (never `git add .`)
-- Capture hash for SUMMARY.md
-- Include Co-Authored-By line
 
 ---
 
@@ -443,14 +438,12 @@ Unlike full phases, quick mode orchestration is inline in the command file — n
 5. Update STATE.md
 6. Commit artifacts
 
-### Commit Convention
+### Recommended Commit Convention (for user reference)
 
 ```
 docs(quick-NNN): description
 
 Quick task completed.
-
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
 
 ---
@@ -486,7 +479,7 @@ How to make tests pass
 </implementation>
 ```
 
-### TDD Commits
+### TDD Commit Convention (for user reference)
 
 - RED: `test({phase}-{plan}): add failing test for [feature]`
 - GREEN: `feat({phase}-{plan}): implement [feature]`
@@ -505,7 +498,7 @@ How to make tests pass
 7. **Context size as quality constraint** — split aggressively
 8. **Temporal language banned** — current state only
 9. **Plans ARE prompts** — executable, not documents
-10. **Atomic commits** — Git history as context source
+10. **Manual git operations** — User handles all git write operations
 11. **AskUserQuestion for all exploration** — always options
 12. **Checkpoints post-automation** — automate first, verify after
 13. **Deviation rules are automatic** — no permission for bugs/critical
