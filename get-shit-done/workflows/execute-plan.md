@@ -159,7 +159,7 @@ grep -n "type=\"checkpoint" .planning/phases/XX-name/{phase}-{plan}-PLAN.md
 **If NO checkpoints found:**
 
 - **Fully autonomous plan** - spawn single subagent for entire plan
-- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY, commits
+- Subagent gets fresh 200k context, executes all tasks, creates SUMMARY
 - Main context: Just orchestration (~5% usage)
 
 **If checkpoints found, parse into segments:**
@@ -186,7 +186,7 @@ IF segment follows checkpoint:decision OR checkpoint:human-action:
 **Pattern A: Fully autonomous (no checkpoints)**
 
 ```
-Spawn subagent → execute all tasks → SUMMARY → commit → report back
+Spawn subagent → execute all tasks → SUMMARY → report back
 ```
 
 **Pattern B: Segmented with verify-only checkpoints**
@@ -196,7 +196,7 @@ Segment 1 (tasks 1-3): Spawn subagent → execute → report back
 Checkpoint 4 (human-verify): Main context → you verify → continue
 Segment 2 (tasks 5-6): Spawn NEW subagent → execute → report back
 Checkpoint 7 (human-verify): Main context → you verify → continue
-Aggregate results → SUMMARY → commit
+Aggregate results → SUMMARY
 ```
 
 **Pattern C: Decision-dependent (must stay in main)**
@@ -220,11 +220,11 @@ No segmentation benefit - execute entirely in main
 
    Prompt: "Execute plan at .planning/phases/{phase}-{plan}-PLAN.md
 
-   This is an autonomous plan (no checkpoints). Execute all tasks, create SUMMARY.md in phase directory, commit with message following plan's commit guidance.
+   This is an autonomous plan (no checkpoints). Execute all tasks, create SUMMARY.md in phase directory. Do NOT run any git write operations (git add, git commit, git push) — all git operations are handled manually by the user.
 
    Follow all deviation rules and authentication gate protocols from the plan.
 
-   When complete, report: plan name, tasks completed, SUMMARY path, commit hash."
+   When complete, report: plan name, tasks completed, SUMMARY path, files modified."
 
 3. After Task tool returns with agent_id:
 
@@ -264,7 +264,7 @@ No segmentation benefit - execute entirely in main
 Execute segment-by-segment:
 
 For each autonomous segment:
-  Spawn subagent with prompt: "Execute tasks [X-Y] from plan at .planning/phases/{phase}-{plan}-PLAN.md. Read the plan for full context and deviation rules. Do NOT create SUMMARY or commit - just execute these tasks and report results."
+  Spawn subagent with prompt: "Execute tasks [X-Y] from plan at .planning/phases/{phase}-{plan}-PLAN.md. Read the plan for full context and deviation rules. Do NOT create SUMMARY. Do NOT run any git write operations (git add, git commit, git push). Just execute these tasks and report results."
 
   Wait for subagent completion
 
@@ -382,7 +382,7 @@ For Pattern A (fully autonomous) and Pattern C (decision-dependent), skip this s
       - Follow all deviation rules and authentication gate protocols
       - Track deviations for later Summary
       - DO NOT create SUMMARY.md (will be created after all segments complete)
-      - DO NOT commit (will be done after all segments complete)
+      - DO NOT run any git write operations (git add, git commit, git push)
 
       **Report back:**
       - Tasks completed
@@ -557,7 +557,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    **If `type="auto"`:**
 
    **Before executing:** Check if task has `tdd="true"` attribute:
-   - If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle with atomic commits per stage
+   - If yes: Follow TDD execution flow (see `<tdd_execution>`) - RED → GREEN → REFACTOR cycle
    - If no: Standard implementation
 
    - Work toward task completion
@@ -566,8 +566,7 @@ Execute each task in the prompt. **Deviations are normal** - handle them automat
    - Continue implementing, applying rules as needed
    - Run the verification
    - Confirm done criteria met
-   - **Commit the task** (see `<task_commit>` below)
-   - Track task completion and commit hash for Summary documentation
+   - Note which files were modified for the user
    - Continue to next task
 
    **If `type="checkpoint:*"`:**
@@ -919,23 +918,14 @@ If no test framework configured:
 - Read `<implementation>` element for guidance
 - Write minimal code to make test pass
 - Run tests - MUST pass
-- Commit: `feat({phase}-{plan}): implement [feature]`
-
 **4. REFACTOR (if needed):**
 - Clean up code if obvious improvements
 - Run tests - MUST still pass
-- Commit only if changes made: `refactor({phase}-{plan}): clean up [feature]`
-
-**Commit pattern for TDD plans:**
-Each TDD plan produces 2-3 atomic commits:
-1. `test({phase}-{plan}): add failing test for X`
-2. `feat({phase}-{plan}): implement X`
-3. `refactor({phase}-{plan}): clean up X` (optional)
 
 **Error handling:**
 - If test doesn't fail in RED phase: Test is wrong or feature already exists. Investigate before proceeding.
 - If test doesn't pass in GREEN phase: Debug implementation, keep iterating until green.
-- If tests fail in REFACTOR phase: Undo refactor, commit was premature.
+- If tests fail in REFACTOR phase: Undo refactor.
 
 **Verification:**
 After TDD plan completion, ensure:
@@ -944,10 +934,6 @@ After TDD plan completion, ensure:
 - No unrelated tests broken
 
 **Why TDD uses dedicated plans:** TDD requires 2-3 execution cycles (RED → GREEN → REFACTOR), each with file reads, test runs, and potential debugging. This consumes 40-50% of context for a single feature. Dedicated plans ensure full quality throughout the cycle.
-
-**Comparison:**
-- Standard plans: Multiple tasks, 1 commit per task, 2-4 commits total
-- TDD plans: Single feature, 2-3 commits for RED/GREEN/REFACTOR cycle
 
 See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 </tdd_plan_execution>
@@ -1054,7 +1040,7 @@ If you were spawned via Task tool and hit a checkpoint, you cannot directly inte
 
 **Required in your return:**
 
-1. **Completed Tasks table** - Tasks done so far with commit hashes and files created
+1. **Completed Tasks table** - Tasks done so far with files created
 2. **Current Task** - Which task you're on and what's blocking it
 3. **Checkpoint Details** - User-facing content (verification steps, decision options, or action instructions)
 4. **Awaiting** - What you need from the user
@@ -1435,15 +1421,7 @@ Inform the user which files were created/modified and are ready to commit:
 <step name="update_codebase_map">
 **If .planning/codebase/ exists:**
 
-Check what changed across all task commits in this plan:
-
-```bash
-# Find first task commit (right after previous plan's docs commit)
-FIRST_TASK=$(git log --oneline --grep="feat({phase}-{plan}):" --grep="fix({phase}-{plan}):" --grep="test({phase}-{plan}):" --reverse | head -1 | cut -d' ' -f1)
-
-# Get all changes from first task through now
-git diff --name-only ${FIRST_TASK}^..HEAD 2>/dev/null
-```
+Check what changed during this plan execution by reviewing the files that were created or modified (tracked in SUMMARY.md).
 
 **Update only if structural changes occurred:**
 

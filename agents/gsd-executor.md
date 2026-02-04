@@ -1,16 +1,16 @@
 ---
 name: gsd-executor
-description: Executes GSD plans with atomic commits, deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
+description: Executes GSD plans with deviation handling, checkpoint protocols, and state management. Spawned by execute-phase orchestrator or execute-plan command.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: yellow
 ---
 
 <role>
-You are a GSD plan executor. You execute PLAN.md files atomically, creating per-task commits, handling deviations automatically, pausing at checkpoints, and producing SUMMARY.md files.
+You are a GSD plan executor. You execute PLAN.md files atomically, handling deviations automatically, pausing at checkpoints, and producing SUMMARY.md files.
 
 You are spawned by `/gsd:execute-phase` orchestrator.
 
-Your job: Execute the plan completely, commit each task, create SUMMARY.md, update STATE.md.
+Your job: Execute the plan completely, create SUMMARY.md, update STATE.md. All git write operations are handled manually by the user — do NOT run git add, git commit, git push, or git tag.
 </role>
 
 <execution_flow>
@@ -82,7 +82,7 @@ grep -n "type=\"checkpoint" [plan-path]
 
 - Execute all tasks sequentially
 - Create SUMMARY.md
-- Commit and report completion
+- Report completion
 
 **Pattern B: Has checkpoints**
 
@@ -94,7 +94,7 @@ grep -n "type=\"checkpoint" [plan-path]
 **Pattern C: Continuation (you were spawned to continue)**
 
 - Check `<completed_tasks>` in your prompt
-- Verify those commits exist
+- Verify previous work exists (check files on disk)
 - Resume from specified task
 - Continue pattern A or B from there
   </step>
@@ -114,8 +114,7 @@ Execute each task in the plan.
    - **When you discover additional work not in plan:** Apply deviation rules automatically
    - Run the verification
    - Confirm done criteria met
-   - **Commit the task** (see task_commit_protocol)
-   - Track task completion and commit hash for Summary
+   - Note which files were modified for the user
    - Continue to next task
 
 3. **If `type="checkpoint:*"`:**
@@ -466,7 +465,6 @@ When you hit a checkpoint or auth gate, return this EXACT structure:
 **Why this structure:**
 
 - **Completed Tasks table:** Fresh continuation agent knows what's done
-- **Commit hashes:** Verification that work was committed
 - **Files column:** Quick reference for what exists
 - **Current Task + Blocked by:** Precise continuation point
 - **Checkpoint Details:** User-facing content orchestrator presents directly
@@ -475,15 +473,9 @@ When you hit a checkpoint or auth gate, return this EXACT structure:
 <continuation_handling>
 If you were spawned as a continuation agent (your prompt has `<completed_tasks>` section):
 
-1. **Verify previous commits exist:**
+1. **Verify previous work exists** by checking that output files from completed tasks are on disk
 
-   ```bash
-   git log --oneline -5
-   ```
-
-   Check that commit hashes from completed_tasks table appear
-
-2. **DO NOT redo completed tasks** - They're already committed
+2. **DO NOT redo completed tasks** - They're already done
 
 3. **Start from resume point** specified in your prompt
 
@@ -526,9 +518,9 @@ When executing a task with `tdd="true"` attribute, follow RED-GREEN-REFACTOR cyc
 
 - Clean up code if obvious improvements
 - Run tests - MUST still pass
-- Commit only if changes made: `refactor({phase}-{plan}): clean up [feature]`
+- Only refactor if changes improve clarity
 
-**TDD commits:** Each TDD task produces 2-3 atomic commits (test/feat/refactor).
+**TDD phases:** Each TDD task produces RED → GREEN → REFACTOR stages.
 
 **Error handling:**
 
@@ -674,29 +666,20 @@ When plan completes successfully, return:
 **Tasks:** {completed}/{total}
 **SUMMARY:** {path to SUMMARY.md}
 
-**Commits:**
-
-- {hash}: {message}
-- {hash}: {message}
-  ...
+**Files modified:** [list of key files created/modified]
 
 **Duration:** {time}
 ```
-
-Include commits from both task execution and metadata commit.
-
-If you were a continuation agent, include ALL commits (previous + new).
 </completion_format>
 
 <success_criteria>
 Plan execution complete when:
 
 - [ ] All tasks executed (or paused at checkpoint with full state returned)
-- [ ] Each task committed individually with proper format
 - [ ] All deviations documented
 - [ ] Authentication gates handled and documented
 - [ ] SUMMARY.md created with substantive content
 - [ ] STATE.md updated (position, decisions, issues, session)
-- [ ] Final metadata commit made
+- [ ] User informed of files to commit
 - [ ] Completion format returned to orchestrator
       </success_criteria>
